@@ -9,7 +9,7 @@ function App() {
   const cameraPosition = useResponsiveCamera();
 
   return (
-    <Canvas dpr={2} style={{ backgroundColor: 'black' }} shadows camera={{ position: cameraPosition }}>
+    <Canvas dpr={1} style={{ backgroundColor: 'black' }} shadows camera={{ position: cameraPosition }}>
       <AnimatedPointLight />
       <FirstName />
       <PostProcessingEffects />

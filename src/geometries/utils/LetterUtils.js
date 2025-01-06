@@ -1,4 +1,4 @@
-export const getRandomStartPosition = (position, range = 1) => {
+export const getRandomStartPosition = (position, range = 0.5) => {
   return [
     position[0] + (Math.random() - 0.5) * range,
     position[1] + (Math.random() - 0.5) * range,
@@ -22,7 +22,8 @@ export const LETTER_CONFIG = {
   },
   opacity: {
     mass: 1,
-    tension: 120,
-    friction: 200,
+    tension: 10,
+    friction: 20,
+    duration: 100, 
   }
 };

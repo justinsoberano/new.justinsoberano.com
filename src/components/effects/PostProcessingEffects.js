@@ -7,10 +7,8 @@ export function PostProcessingEffects() {
       <Bloom
         intensity={0.1}
         luminanceThreshold={1}
-        kernelSize={KernelSize.LARGE}
         luminanceSmoothing={1}
-        resolutionX={Resolution.AUTO_SIZE}
-        resolutionY={Resolution.AUTO_SIZE}
+        height={300}
       />
       <Glitch
         delay={[1, 5]}
@@ -25,7 +23,7 @@ export function PostProcessingEffects() {
         columns={64}
         strength={1}
       />
-      <Noise premultiply blendFunction={BlendFunction.ADD} opacity={2} />
+      <Noise premultiply blendFunction={BlendFunction.ADD} opacity={1} />
     </EffectComposer>
   );
 }

@@ -9,6 +9,7 @@ export function AnimatedPointLight() {
       mass: 1,
       tension: 280,
       friction: 2000,
+      duration: 1000,
     }
   });
 
