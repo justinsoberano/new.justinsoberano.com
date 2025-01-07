@@ -4,12 +4,9 @@ export function AnimatedPointLight() {
   const spring = useSpring({
     from: { intensity: 0 },
     to: { intensity: 100 },
-    delay: 7500,
+    delay: 4750,
     config: {
-      mass: 1,
-      tension: 280,
-      friction: 2000,
-      duration: 1000,
+      duration: 50,
     }
   });
 
