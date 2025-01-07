@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { FirstName } from './geometries/name/Name';
+import { FirstName } from './three/name/Name';
 import { AnimatedPointLight } from './components/lighting/AnimatedPointLight';
 import { PostProcessingEffects } from './components/effects/PostProcessingEffects';
 import { useResponsiveCamera } from './components/hooks/useResponsiveCamera';

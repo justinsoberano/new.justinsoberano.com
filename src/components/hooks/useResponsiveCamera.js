@@ -7,7 +7,7 @@ export function useResponsiveCamera() {
     const updateCameraPosition = () => {
       const width = window.innerWidth
       const newZPosition = Math.max(2, 5 - width / 500);
-      setCameraPosition([0.3, 0, newZPosition]);
+      setCameraPosition([0, 0, newZPosition]);
     };
     
     updateCameraPosition();
