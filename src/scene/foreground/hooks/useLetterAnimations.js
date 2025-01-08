@@ -12,25 +12,15 @@ export const useLetterAnimations = (position, delay) => {
     from: {
       position: initialState.startPosition,
       rotation: initialState.startRotation,
-      scale: 1,
     },
     to: {
       position: position,
       rotation: [1, 0, 0],
-      scale: 1,
     },
     delay,
     config: LETTER_CONFIG.transform,
     immediate: false,
   });
 
-  const opacitySpring = useSpring({
-    from: { opacity: 0 },
-    to: { opacity: 1 },
-    delay: delay + 500,
-    config: LETTER_CONFIG.opacity,
-    immediate: false,
-  });
-
-  return { transformSpring, opacitySpring };
+  return { transformSpring };
 };

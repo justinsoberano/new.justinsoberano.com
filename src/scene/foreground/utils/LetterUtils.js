@@ -6,11 +6,12 @@ export const getRandomStartPosition = (position, range = 1) => {
   ];
 };
 
+
 export const getRandomRotation = () => {
   return [
-    Math.random() * Math.PI,
-    Math.random() * Math.PI,
-    Math.random() * Math.PI
+    (Math.random() - 0.5) * Math.PI * 4,
+    (Math.random() - 0.5) * Math.PI * 2,
+    (Math.random() - 0.5) * Math.PI * 2
   ];
 };
 
@@ -18,12 +19,12 @@ export const LETTER_CONFIG = {
   transform: {
     mass: 2,
     tension: 200,
-    friction: 700,
+    friction: 500,
   },
   opacity: {
     mass: 1,
     tension: 10,
-    friction: 20,
+    friction: 200,
     duration: 100, 
   }
 };
