@@ -2,9 +2,11 @@ import { Canvas } from '@react-three/fiber';
 import { FirstName } from './three/name/Name';
 import { AnimatedPointLight } from './components/lighting/AnimatedPointLight';
 import { PostProcessingEffects } from './components/effects/PostProcessingEffects';
+import { PostProcessingEffectsBackground } from "./components/effects/PostProcessingEffectsBackground";
 import { useResponsiveCamera } from './components/hooks/useResponsiveCamera';
 import { Warning } from './components/Warning';
 import { Suspense, useEffect, useState } from 'react';
+import Background from './three/background/Background';
 
 const mainAudio = new Audio("audio.mp3");
 mainAudio.preload = "auto";
@@ -12,16 +14,22 @@ mainAudio.preload = "auto";
 const ThreeDScene = ({ dpr, cameraPosition }) => (
   <>
     <div className="box">WORK IN PROGRESS</div>
-    <Canvas
-      dpr={dpr}
-      style={{ backgroundColor: 'black' }}
-      shadows
-      camera={{ position: cameraPosition }}
-    >
-      <AnimatedPointLight />
-      <FirstName />
-      <PostProcessingEffects />
-    </Canvas>
+    // dirty dirty dirty
+    <div className="canvas-container background-canvas">
+      <Canvas dpr={1} camera={{ position: cameraPosition }}>
+        <AnimatedPointLight />
+        <Background />
+        <PostProcessingEffectsBackground />
+      </Canvas>
+    </div>
+
+    <div className="canvas-container firstname-canvas">
+      <Canvas dpr={dpr} camera={{ position: cameraPosition }}>
+        <AnimatedPointLight />
+        <FirstName />
+        <PostProcessingEffects />
+      </Canvas>
+    </div>
   </>
 );
 
@@ -80,9 +88,6 @@ function App() {
 
   return (
     <>
-      <button onClick={toggleAudio} style={{ position: 'absolute', top: 10, right: 10 }}>
-        {audio ? "PAUSE MUSIC" : "PLAY MUSIC"}
-      </button>
       <Suspense fallback={null}>
         <ThreeDScene dpr={dpr} cameraPosition={cameraPosition} />
       </Suspense>

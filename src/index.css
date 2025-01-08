@@ -24,3 +24,26 @@ code {
   font-size: large;
 }
 
+.canvas-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.background-canvas {
+  z-index: 0;
+}
+
+.firstname-canvas {
+  z-index: 1;
+  pointer-events: none;
+  background: transparent;
+}
+
+/* Keep your work in progress box visible */
+.box {
+  position: fixed;
+  z-index: 1000;
+}
