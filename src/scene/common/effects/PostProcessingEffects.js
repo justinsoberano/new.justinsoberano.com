@@ -37,7 +37,7 @@ export function PostProcessingEffectsBackground() {
   return (
     <EffectComposer>
       <Glitch delay={[4.7, 4.7]} duration={[1, 1]} ratio={1} columns={1} strength={1} active={isSecondGlitchActive}/>
-      <Pixelation granularity={2} />
+      <Pixelation granularity={1} />
     </EffectComposer>
   );
 }

@@ -5,13 +5,27 @@ import { useDevice } from '../../../common/useDevice'
 const BASE_WIDTH = 1.6
 const BASE_HEIGHT = BASE_WIDTH * (9/16)
 
-const CarouselPlane = ({ position, color, width = BASE_WIDTH, height = BASE_HEIGHT }) => {
+const CarouselPlane = ({ position, width = BASE_WIDTH, height = BASE_HEIGHT, texture, color, isAnimated }) => {
   const meshRef = useRef()
-  useFrame(() => meshRef.current && (meshRef.current.position.x = position[0]))
+  
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.position.x = position[0];
+      if (isAnimated && texture) {
+        texture.needsUpdate = true;
+      }
+    }
+  })
+
   return (
     <mesh ref={meshRef} position={position}>
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial color={color} />
+      <meshBasicMaterial 
+        map={texture}
+        color={color}
+        transparent={true}
+        opacity={1}
+      />
     </mesh>
   )
 }
@@ -75,7 +89,7 @@ const ScrollingRow = ({
 
 const ScrollingPlanes = ({ 
   rows = [
-    { planeData: [{ id: 1, color: 'red' }, { id: 2, color: 'blue' }], direction: 1, yOffset: 0 }
+    { planeData: [{ id: 1, texture: null, color: 'gray' }], direction: 1, yOffset: 0 }
   ],
   ...props 
 }) => {
