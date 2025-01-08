@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ScrollingPlanes from "./experiments/ScrollingPlanes";
 import * as THREE from 'three';
 
@@ -6,7 +6,6 @@ function Background() {
   const [show, setShow] = useState(false);
   const [loadedPlanes, setLoadedPlanes] = useState([]);
   
-  // Memoize the plane generation function
   const generatePlanes = useCallback((startId) => 
     Array.from({ length: 10 }, (_, i) => ({
       id: startId + i,
@@ -14,7 +13,6 @@ function Background() {
       videoIndex: ((startId + i) % 9) + 1
     })), []);
 
-  // Memoize video creation
   const createVideo = useCallback((index) => {
     const video = document.createElement('video');
     video.src = `/videos/${index}.mp4`;
@@ -23,16 +21,22 @@ function Background() {
     video.playsinline = true;
     video.crossOrigin = 'anonymous';
     
-    // Add loading optimization
-    video.preload = 'auto';
-    video.setAttribute('webkit-playsinline', 'true');
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.disablePictureInPicture = true;
+    video.disableRemotePlayback = true;
     
-    // Add error handling
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.objectFit = 'cover';
+    
+    video.preload = 'auto';
+    
     video.onerror = (e) => {
       console.error(`Error loading video ${index}:`, e);
     };
     
-    // Optimize video settings
     video.addEventListener('loadedmetadata', () => {
       video.play().catch(console.error);
     });
@@ -40,14 +44,11 @@ function Background() {
     return video;
   }, []);
 
-  // Memoize texture creation
   const createVideoTexture = useCallback((video) => {
     const texture = new THREE.VideoTexture(video);
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
     texture.format = THREE.RGBAFormat;
-    
-    // Optimize texture settings
     texture.generateMipmaps = false;
     texture.needsUpdate = true;
     
@@ -58,8 +59,7 @@ function Background() {
     let mounted = true;
     const videos = [];
     const videoTextures = [];
-    
-    // Batch video creation
+
     const initializeVideos = async () => {
       const videoPromises = Array.from({ length: 9 }, async (_, i) => {
         const video = createVideo(i + 1);
@@ -94,12 +94,6 @@ function Background() {
         ];
 
         setLoadedPlanes(rows);
-        
-        const timer = setTimeout(() => {
-          if (mounted) setShow(true);
-        }, 2000);
-
-        return () => clearTimeout(timer);
       } catch (error) {
         console.error('Error initializing videos:', error);
       }
@@ -107,7 +101,6 @@ function Background() {
 
     initializeVideos();
 
-    // Cleanup function
     return () => {
       mounted = false;
       videos.forEach(video => {
@@ -122,14 +115,19 @@ function Background() {
     };
   }, [createVideo, createVideoTexture, generatePlanes]);
 
-  // Memoize the component render condition
-  const shouldRender = useMemo(() => 
-    show && loadedPlanes.length > 0, [show, loadedPlanes.length]
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShow(true);
+    }, 4800);
 
-  return shouldRender ? (
-    <ScrollingPlanes rows={loadedPlanes} speed={0.003} />
-  ) : null;
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    show && loadedPlanes.length > 0 ? (
+      <ScrollingPlanes rows={loadedPlanes} speed={0.003} />
+    ) : null
+  );
 }
 
 export default Background;
