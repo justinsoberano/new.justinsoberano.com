@@ -23,10 +23,10 @@ export const sentences = [
 ];
 
 export const sentences2 = [
-  "I live for the hunger, knowing that love is the pain of truly being alive and that I'm the sucker caught in its cycle.",
-  "Reason loves only itself and Lucifer was always rational, yet still I live for the hunger because love is the pain of truly being alive.",
-  "I'm swimming in the pool of my soul, seeking my mother's comfort amid overwhelming frustration.",
-  "Performers toil in vain and succeeders endure pain and impatience while working in a heartbreak shop.",
-  "I'm just another angel bleeding in the basement, waiting for the 8 o'clock train so I can go home, brush my hair, and sleep to do it all over again.",
-  "I stare into the currents of my being and what I'm seeing, realizing I'm sold because it's just too easy.",
+  "I live for the hunger, love is the pain of truly being alive, I guess I'm that sucker, Love is the pain of truly being alive.",
+  "Reason loves only itself, Lucifer was always rational, I live for the hunger, Love is the pain of truly being alive.",
+  "Swimming in the pool soul, for the comfort of my mother, and the frustration.",
+  "The performers in vain, the succeeders in pain, and impatient, working in a heartbreak shop.",
+  "And I'm just another angel, bleeding in the basement, waiting for the 8 o'clock train, So I could go home, and brush my hair, and go to sleep, to do it all over again.",
+  "And then I stare into the currents, of my being, stare into the currents, of what I'm seeing, I know that I'm sold. It's too easy, easy, easy.",
 ]; 
