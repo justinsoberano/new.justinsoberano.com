@@ -1,13 +1,11 @@
 import React from 'react';
-import Vortex from './components/Vortex';
-import AcrylicContainer from './components/AcrylicContainer';
-import { appContainerStyle } from './styles/VortexStyles';
+import GridLayout from './components/GridLayout';
+import AsciiBox from './components/AsciiBox';
 
 export default function App() {
   return (
-    <div style={appContainerStyle}>
-      <Vortex />
-      <AcrylicContainer />
-    </div>
+    <GridLayout>
+      <AsciiBox />
+    </GridLayout>
   );
 }

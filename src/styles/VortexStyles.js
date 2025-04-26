@@ -6,9 +6,6 @@ export const preStyle = {
   fontSize: '12px',
   lineHeight: '12px',
   color: '#111',
-  width: '100vw',
-  height: '100vh',
-  overflow: 'hidden',
   position: 'absolute',
   top: 0,
   left: 0,
@@ -22,4 +19,4 @@ export const appContainerStyle = {
   margin: 0,
   padding: 0,
   position: 'relative',
-}; 
+};
