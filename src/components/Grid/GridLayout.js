@@ -1,8 +1,7 @@
 import React from 'react';
-import Vortex from './Vortex';
-import { GridContext } from '../context/GridContext';
-import { useGridMetrics } from '../hooks/useGridMetrics';
-import { appContainerStyle, preStyle } from '../styles/VortexStyles';
+import { GridContext } from '../../context/GridContext';
+import { useGridMetrics } from '../../hooks/useGridMetrics';
+import { appContainerStyle, preStyle } from '../../styles/GlobalStyles';
 
 export default function GridLayout({ children }) {
   const { rows, cols, preRef } = useGridMetrics();
@@ -25,7 +24,6 @@ export default function GridLayout({ children }) {
         }}
       />
 
-      <Vortex />
       <GridContext.Provider value={{ rows, cols }}>
         {children}
       </GridContext.Provider>

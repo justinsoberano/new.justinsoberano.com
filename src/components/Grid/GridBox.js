@@ -1,6 +1,6 @@
 import React from 'react';
-import { preStyle } from '../styles/VortexStyles';
-import { useGridPosition } from '../hooks/useGridPosition';
+import { preStyle } from '../../styles/GlobalStyles';
+import { useGridPosition } from '../../hooks/useGridPosition';
 
 export default function GridBox({
   rowFrac = 0,
@@ -8,7 +8,7 @@ export default function GridBox({
   widthCols,
   heightRows,
   padding = 0,
-  background = '#f5f5f5',
+  background = 'var(--primary-color)',
   children
 }) {
 

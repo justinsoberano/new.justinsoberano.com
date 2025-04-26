@@ -5,14 +5,14 @@ export const preStyle = {
   fontFamily: 'monospace',
   fontSize: '12px',
   lineHeight: '12px',
-  color: '#111',
+  color: 'var(--secondary-color)',
   position: 'absolute',
   top: 0,
   left: 0,
 };
 
 export const appContainerStyle = {
-  backgroundColor: '#f5f5f5',
+  backgroundColor: 'var(--primary-color)',
   width: '100vw',
   height: '100vh',
   overflow: 'hidden',

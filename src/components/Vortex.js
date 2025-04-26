@@ -1,27 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  randomSymbols,
-  asciiJustin,
-  asciiSoberano,
-  lyrics_one,
-  lyrics_two,
-  lyrics_three,
-  lyrics_one_mobile,
-  lyrics_two_mobile,
-  lyrics_three_mobile
-} from '../constants/ascii';
-import { preStyle } from '../styles/VortexStyles';
-import { IsMobile } from '../utils/UAAgent';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { lyrics_one, lyrics_two, lyrics_three, lyrics_one_mobile, lyrics_two_mobile, lyrics_three_mobile } from '../constants/ascii';
+import { preStyle } from '../styles/GlobalStyles';
+import { IsMobile } from '../hooks/useUAAgent';
 import { useGridMetrics } from '../hooks/useGridMetrics';
-
-//TODO: optimize mathhhh
 
 const CONFIG = {
   fps: 60,
   fizzleDuration: 10,
   hXFactor: 0.15,
   hYFactor: 0.08,
-  swirl: { base: 1.5, decay: 3, speed: 0.4 },
+  swirl: { base: 1.5, decay: 3, speed: 0.5 },
   lyricSections: [
     { name: 'lyrics_one', percent: 0.25 },
     { name: 'lyrics_two', percent: 0.5 },
@@ -30,164 +18,146 @@ const CONFIG = {
   levels: 50
 };
 
-function computeOverlay(rows, cols, isMobile) {
-  const widthJ = Math.max(...asciiJustin.map(l => l.length));
-  const widthS = Math.max(...asciiSoberano.map(l => l.length));
+function initCellData(rows, cols) {
+  const cells = [];
+  const buckets = new Set();
+  const cx = cols / 2, cy = rows / 2;
+  const invHX = 1 / (cols * CONFIG.hXFactor);
+  const invHY = 1 / (rows * CONFIG.hYFactor);
+  const quant = CONFIG.levels;
+  const decay = CONFIG.swirl.decay;
 
-  let lines;
-  if (isMobile || rows > cols) {
-    const totalWidth = widthS;
-    const offset = Math.round((totalWidth - widthJ) / 2);
-    const centered = asciiJustin.map(line => ' '.repeat(offset) + line.padEnd(totalWidth - offset));
-    const padded = asciiSoberano.map(line => line.padEnd(totalWidth));
-    lines = [...centered, ...padded];
-  } else {
-    lines = asciiJustin.map((l, i) => l.padEnd(widthJ) + (asciiSoberano[i] || '').padEnd(widthS));
+  for (let i = 0; i < rows * cols; i++) {
+    const y = Math.floor(i / cols), x = i - y * cols;
+    const dx = x - cx, dy = y - cy;
+    const rNorm = Math.hypot(dx * invHX, dy * invHY);
+    const theta = Math.atan2(dy * invHY, dx * invHX);
+    const bucket = Math.round(rNorm * quant);
+    buckets.add(bucket);
+    cells.push({
+      bucket,
+      cosBase: Math.cos(theta),
+      sinBase: Math.sin(theta),
+      rNorm,
+      decayTerm: Math.exp(-decay * rNorm)
+    });
   }
 
-  return { lines, artH: lines.length, artW: lines[0].length };
+  const bucketInfo = Array.from(buckets).map(b => ({
+    bucket: b,
+    swirlTerm: Math.exp(-b / quant)
+  }));
+
+  return { cells, bucketInfo };
+}
+
+function initSrc(rows, cols, isMobile) {
+  const sections = CONFIG.lyricSections.map(sec => {
+    const pool = {
+      lyrics_one: isMobile ? lyrics_one_mobile : lyrics_one,
+      lyrics_two: isMobile ? lyrics_two_mobile : lyrics_two,
+      lyrics_three: isMobile ? lyrics_three_mobile : lyrics_three
+    }[sec.name] || [];
+    return { pool, percent: sec.percent };
+  });
+
+  let acc = 0;
+  const bounds = sections.map(sec => {
+    const start = Math.floor(acc * rows);
+    acc += sec.percent;
+    return { ...sec, start, end: Math.floor(acc * rows) };
+  });
+
+  return Array.from({ length: rows }, (_, r) => {
+    const b = bounds.find(b => r >= b.start && r < b.end) || bounds[bounds.length - 1];
+    const line = b.pool[(r - b.start) % b.pool.length] || '';
+    return Array.from({ length: cols }, (_, c) => (c < line.length ? line[c] : ' '));
+  });
 }
 
 export default function Vortex() {
   const { rows, cols, preRef } = useGridMetrics();
-  const srcRef = useRef([]);
-  const overlayRef = useRef({ lines: [], artH: 0, artW: 0 });
-  const cellDataRef = useRef([]);
-  const bucketListRef = useRef([]);
-  const tRef = useRef(0);
-  const lastTimeRef = useRef(0);
-  const rafRef = useRef(null);
   const isMobile = IsMobile();
 
-  useEffect(() => {
-    if (!rows || !cols) return;
+  const { cells, bucketInfo } = useMemo(
+    () => initCellData(rows, cols),
+    [rows, cols]
+  );
+  const srcGrid = useMemo(
+    () => initSrc(rows, cols, isMobile),
+    [rows, cols, isMobile]
+  );
 
-    const sections = CONFIG.lyricSections.map(sec => {
-      let pool;
-      switch (sec.name) {
-        case 'lyrics_one': pool = isMobile ? lyrics_one_mobile : lyrics_one; break;
-        case 'lyrics_two': pool = isMobile ? lyrics_two_mobile : lyrics_two; break;
-        case 'lyrics_three': pool = isMobile ? lyrics_three_mobile : lyrics_three; break;
-        default: pool = [];
-      }
-      return { pool, percent: sec.percent };
-    });
-    let acc = 0;
-    const boundaries = sections.map(sec => {
-      const start = Math.floor(acc * rows);
-      acc += sec.percent;
-      return { ...sec, start, end: Math.floor(acc * rows) };
-    });
-    srcRef.current = Array.from({ length: rows }, (_, r) => {
-      const b = boundaries.find(b => r >= b.start && r < b.end) || boundaries[boundaries.length - 1];
-      const line = b.pool[(r - b.start) % b.pool.length] || '';
-      return Array.from({ length: cols }, (_, c) => (c < line.length ? line[c] : ' '));
-    });
-
-    overlayRef.current = computeOverlay(rows, cols, isMobile);
-
-    const cx = cols / 2;
-    const cy = rows / 2;
-    const invHX = 1 / (cols * CONFIG.hXFactor);
-    const invHY = 1 / (rows * CONFIG.hYFactor);
-    const quant = CONFIG.levels;
-    const cells = [];
-    const buckets = new Set();
-    for (let i = 0; i < rows * cols; i++) {
-      const y = Math.floor(i / cols);
-      const x = i - y * cols;
-      const dx = x - cx;
-      const dy = y - cy;
-      const rNorm = Math.hypot(dx * invHX, dy * invHY);
-      const theta = Math.atan2(dy * invHY, dx * invHX);
-      const bucket = Math.round(rNorm * quant);
-      buckets.add(bucket);
-      cells.push({ rNorm, bucket, cosTheta: Math.cos(theta), sinTheta: Math.sin(theta) });
-    }
-    cellDataRef.current = cells;
-    bucketListRef.current = Array.from(buckets);
-  }, [rows, cols, isMobile]);
+  const bufferRef = useRef([]);
+  const rowLinesRef = useRef([]);
+  const tRef = useRef(0);
+  const lastTsRef = useRef(0);
+  const rafRef = useRef(null);
 
   useEffect(() => {
-    const animate = ts => {
-      if (!rows || !cols) {
-        rafRef.current = requestAnimationFrame(animate);
-        return;
-      }
-      if (!lastTimeRef.current) lastTimeRef.current = ts;
-      const delta = ts - lastTimeRef.current;
-      const interval = 1000 / CONFIG.fps;
-      if (delta < interval) {
-        rafRef.current = requestAnimationFrame(animate);
-        return;
-      }
-      lastTimeRef.current = ts - (delta % interval);
+    bufferRef.current = new Array(rows * cols);
+    rowLinesRef.current = new Array(rows);
+  }, [rows, cols]);
 
-      const { lines: overlayLines, artH, artW } = overlayRef.current;
-      const src = srcRef.current;
-      const t = tRef.current;
-      const fizzle = Math.min(1, t / CONFIG.fizzleDuration);
-      const applyingFizzle = fizzle < 1;
-
-      const cosTerm = {};
-      const sinTerm = {};
-      const expDecay = CONFIG.swirl.decay;
-      const { base, speed } = CONFIG.swirl;
-      bucketListRef.current.forEach(bucket => {
-        const rApprox = bucket / CONFIG.levels;
-        const term = base * fizzle * Math.exp(-expDecay * rApprox) + t * speed * Math.exp(-rApprox);
-        cosTerm[bucket] = Math.cos(term);
-        sinTerm[bucket] = Math.sin(term);
-      });
-
-      const buffer = Array(rows * cols);
-      const halfCols = cols * CONFIG.hXFactor;
-      const halfRows = rows * CONFIG.hYFactor;
-      const cellData = cellDataRef.current;
-      for (let i = 0; i < cellData.length; i++) {
-        const { rNorm, bucket, cosTheta, sinTheta } = cellData[i];
-        const cT = cosTerm[bucket];
-        const sT = sinTerm[bucket];
-        const cosAng = cosTheta * cT - sinTheta * sT;
-        const sinAng = sinTheta * cT + cosTheta * sT;
-        const fx = cosAng * rNorm;
-        const fy = sinAng * rNorm;
-        let sx = Math.round(fx * halfCols + cols / 2) % cols;
-        let sy = Math.round(fy * halfRows + rows / 2) % rows;
-        if (sx < 0) sx += cols;
-        if (sy < 0) sy += rows;
-        buffer[i] = src[sy][sx] || ' ';
-      }
-
-      const startY = Math.floor(rows / 2 - artH / 2);
-      const startX = Math.floor(cols / 2 - artW / 2);
-      overlayLines.forEach((line, yi) => {
-        const row = startY + yi;
-        if (row < 0 || row >= rows) return;
-        for (let xi = 0; xi < line.length; xi++) {
-          const c = line[xi];
-          if (!c) continue;
-          const idx = row * cols + startX + xi;
-          buffer[idx] = c !== ' ' && applyingFizzle && Math.random() < 1 - fizzle
-            ? randomSymbols[(Math.random() * randomSymbols.length) | 0]
-            : c;
-        }
-      });
-
-      let frame = '';
-      for (let r = 0; r < rows; r++) {
-        const rowOffset = r * cols;
-        frame += buffer.slice(rowOffset, rowOffset + cols).join('') + '\n';
-      }
-      preRef.current.textContent = frame;
-
-      tRef.current = t + 0.1;
+  const animate = useCallback(ts => {
+    if (!rows || !cols) {
       rafRef.current = requestAnimationFrame(animate);
-    };
+      return;
+    }
+    if (!lastTsRef.current) lastTsRef.current = ts;
+    const delta = ts - lastTsRef.current;
+    const interval = 1000 / CONFIG.fps;
+    if (delta < interval) {
+      rafRef.current = requestAnimationFrame(animate);
+      return;
+    }
+    lastTsRef.current = ts - (delta % interval);
 
+    const fizzle = Math.min(1, tRef.current / CONFIG.fizzleDuration);
+    const { base, speed } = CONFIG.swirl;
+
+    const cosTerms = {};
+    const sinTerms = {};
+    bucketInfo.forEach(({ bucket, swirlTerm }) => {
+      const decayTerm = cells.find(c => c.bucket === bucket).decayTerm;
+      const term = base * fizzle * decayTerm + tRef.current * speed * swirlTerm;
+      cosTerms[bucket] = Math.cos(term);
+      sinTerms[bucket] = Math.sin(term);
+    });
+
+    const buf = bufferRef.current;
+    const halfX = cols * CONFIG.hXFactor;
+    const halfY = rows * CONFIG.hYFactor;
+
+    cells.forEach((cell, i) => {
+      const cT = cosTerms[cell.bucket];
+      const sT = sinTerms[cell.bucket];
+      const cosAng = cell.cosBase * cT - cell.sinBase * sT;
+      const sinAng = cell.sinBase * cT + cell.cosBase * sT;
+      let sx = Math.round(cosAng * cell.rNorm * halfX + cols / 2) % cols;
+      let sy = Math.round(sinAng * cell.rNorm * halfY + rows / 2) % rows;
+      if (sx < 0) sx += cols;
+      if (sy < 0) sy += rows;
+      buf[i] = srcGrid[sy][sx] || ' ';
+    });
+
+    const rowsArr = rowLinesRef.current;
+    for (let r = 0; r < rows; r++) {
+      const slice = buf.slice(r * cols, r * cols + cols);
+      rowsArr[r] = slice.join('');
+    }
+    if (preRef.current) {
+      preRef.current.textContent = rowsArr.join('\n');
+    }
+
+    tRef.current += 0.1;
+    rafRef.current = requestAnimationFrame(animate);
+  }, [rows, cols, cells, bucketInfo, srcGrid, preRef]);
+
+  useEffect(() => {
     rafRef.current = requestAnimationFrame(animate);
     return () => rafRef.current && cancelAnimationFrame(rafRef.current);
-  }, [rows, cols, preRef]);
+  }, [animate]);
 
   return <pre ref={preRef} style={preStyle} />;
 }
