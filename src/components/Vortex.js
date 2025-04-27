@@ -6,10 +6,11 @@ import { useGridMetrics } from '../hooks/useGridMetrics';
 
 const CONFIG = {
   fps: 60,
-  fizzleDuration: 10,
   hXFactor: 0.15,
   hYFactor: 0.08,
-  swirl: { base: 1.5, decay: 3, speed: 0.5 },
+  hXFactor_mobile: 0.3,
+  hYFactor_mobile: 0.16,
+  swirl: { base: 1.5, decay: 3, speed: 1, speed_mobile: 0.4 },
   lyricSections: [
     { name: 'lyrics_one', percent: 0.25 },
     { name: 'lyrics_two', percent: 0.5 },
@@ -18,12 +19,14 @@ const CONFIG = {
   levels: 50
 };
 
-function initCellData(rows, cols) {
+function initCellData(rows, cols, isMobile) {
+  const hX = isMobile ? CONFIG.hXFactor_mobile : CONFIG.hXFactor;
+  const hY = isMobile ? CONFIG.hYFactor_mobile : CONFIG.hYFactor;
   const cells = [];
   const buckets = new Set();
   const cx = cols / 2, cy = rows / 2;
-  const invHX = 1 / (cols * CONFIG.hXFactor);
-  const invHY = 1 / (rows * CONFIG.hYFactor);
+  const invHX = 1 / (cols * hX);
+  const invHY = 1 / (rows * hY);
   const quant = CONFIG.levels;
   const decay = CONFIG.swirl.decay;
 
@@ -80,8 +83,8 @@ export default function Vortex() {
   const isMobile = IsMobile();
 
   const { cells, bucketInfo } = useMemo(
-    () => initCellData(rows, cols),
-    [rows, cols]
+    () => initCellData(rows, cols, isMobile),
+    [rows, cols, isMobile]
   );
   const srcGrid = useMemo(
     () => initSrc(rows, cols, isMobile),
@@ -113,21 +116,23 @@ export default function Vortex() {
     }
     lastTsRef.current = ts - (delta % interval);
 
-    const fizzle = Math.min(1, tRef.current / CONFIG.fizzleDuration);
-    const { base, speed } = CONFIG.swirl;
+    const { base, speed, speed_mobile } = CONFIG.swirl;
+
+    const hX = isMobile ? CONFIG.hXFactor_mobile : CONFIG.hXFactor;
+    const hY = isMobile ? CONFIG.hYFactor_mobile : CONFIG.hYFactor;
+    const halfX = cols * hX;
+    const halfY = rows * hY;
 
     const cosTerms = {};
     const sinTerms = {};
     bucketInfo.forEach(({ bucket, swirlTerm }) => {
       const decayTerm = cells.find(c => c.bucket === bucket).decayTerm;
-      const term = base * fizzle * decayTerm + tRef.current * speed * swirlTerm;
+      const term = base * decayTerm + tRef.current * (isMobile ? speed_mobile : speed) * swirlTerm;
       cosTerms[bucket] = Math.cos(term);
       sinTerms[bucket] = Math.sin(term);
     });
 
     const buf = bufferRef.current;
-    const halfX = cols * CONFIG.hXFactor;
-    const halfY = rows * CONFIG.hYFactor;
 
     cells.forEach((cell, i) => {
       const cT = cosTerms[cell.bucket];
@@ -152,7 +157,7 @@ export default function Vortex() {
 
     tRef.current += 0.1;
     rafRef.current = requestAnimationFrame(animate);
-  }, [rows, cols, cells, bucketInfo, srcGrid, preRef]);
+  }, [rows, cols, cells, bucketInfo, srcGrid, preRef, isMobile]);
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(animate);

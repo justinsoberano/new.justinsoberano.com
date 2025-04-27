@@ -14,7 +14,7 @@ export default function AsciiPair({ isMobile }) {
 
   useEffect(() => {
     const duration = 1500;
-    const intervalMs = 100;
+    const intervalMs = 50;
     const start = Date.now();
 
     const iv = setInterval(() => {
