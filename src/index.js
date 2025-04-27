@@ -6,8 +6,6 @@ import App from './App';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <div draggable={false} class={'no-select'}>
-      <App />
-    </div>
+    <App />
   </React.StrictMode>
 );

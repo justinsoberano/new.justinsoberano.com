@@ -19,8 +19,7 @@ code {
   -ms-user-select: none;
 }
 
-
 :root {
-  --primary-color: #f5f5f5;
-  --secondary-color: #111;
+  --primary-color: #0000dd;
+  --secondary-color: #dddddd;
 }
